@@ -1,0 +1,2 @@
+Go Web编程 http://www.520doc.com/read/go-web/02.7.md
+Go语言四十二章经  http://www.520doc.com/read/go42/42_16_function.md
