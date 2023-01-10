@@ -223,3 +223,298 @@ func main() {
 // type用于声明自定义类型（type  interface｛｝  type struct{}）
 // map用于声明map类型数据 ---> make(map[string]int)
 // range用于读取slice、map、channel数据
+
+	// check type  
+	// 1. %T fmt.Printf
+	// 2. reflect.TypeOf(s)
+	// 2. reflect.TypeOf(s).Kind()
+	
+	fmt.Printf("%T",s)
+
+	
+	fmt.Println(reflect.TypeOf(s))
+	fmt.Println(reflect.TypeOf(s).Kind())
+
+	//     1.数值类型和string类型之间的相互转换可能造成值部分丢失；其他的转换仅是类型的转换，不会造成值的改变;
+        // 2.string和数字之间转换可使用标准库strconv;
+	// strconv.Itoa(8)---> "8"
+	// strconv.Atoi("102")--->102
+        // 3.或者想要转换byte数组（[]byte或 []rune）为string字符串类型，这种情况下可以用string(): []byte -> string 
+
+ 
+
+	
+	//Go虽然保留了指针，但与其他编程语言不同的是，在Go当中不支持指针运算以及"->"运算符，而直接采用"."选择符来操作指针目标对象的成员。
+// 操作符"&"取变量地址，使用“*”通过指针间接访问目标对象
+// 默认值是nil而非NULL
+
+// 一个指针变量可以指向任何一个值的内存地址。指针变量类似于变量和常量，在使用指针前需要声明。指针声明格式如下：
+// var var_name *var-type
+
+// 如何使用指针
+// 1. 定义指针变量
+// 2. 为指针变量赋值
+// 3. 访问指针变量中指向地址的值
+// 4. 在指针类型前面加上*号(前缀)来获取指针所指向的内容。
+
+func main() {
+	var b int
+	a := 2
+	b = a  //传值引用 ---> 只是拷贝。无法改变原有变量
+
+	b = 3    //传值引用---> 只是拷贝。无法改变原有变量
+	
+	fmt.Println(b)
+	fmt.Println(a)
+	var ptrInt *int // 1. 定义指针变量
+
+	ptrInt = &a         // 2. 为指针变量赋值   //地址引用 改变引用内内容，原有变量也发生变化
+	fmt.Println(ptrInt) // 3. 访问指针变量中指向地址的值
+
+	*ptrInt = 66  // 地址引用 改变引用内内容，原有变量也发生变化
+
+	fmt.Println(strings.Repeat("-", 12))
+
+	fmt.Println(*ptrInt) // 4. 在指针类型前面加上*号(前缀)来获取指针所指向的内容。
+	fmt.Println(a)
+
+}
+
+
+//接口interface
+
+// 接口是一个多个方法签名的集合
+// 只要某个类型拥有该接口的所有方法签名，即算实现该接口，无需显示声明实现了哪个接口，这称为Structural Typing
+// 接口只有方法声明，没有实现，没有数据字段
+// 接口可以匿名嵌入其他接口，或嵌入结构中
+// 将对象赋值给接口时，会发生拷贝，而接口内部存储的是指向这个复制品的指针，既无法修改复制品的状态，也无法获取指针
+// 只有当接口存储的类型和对象都为nil时，接口才等于nil
+//接口调用不会做receiver的自动转换
+// 接口同样支持匿名字段方法
+// 接口也可以实现类似OOP中的多台
+// 空接口可以作为任何类型数据的容器(var a interface{})
+
+// 类型断言
+// 通过类型断言的ok pattern可以判断接口的数据类型
+// 使用type swtich则可针对空接口进行比较全面的类型判断
+// 接口转换
+// 可以将拥有超集的接口转换为子集的接口
+
+
+//反射reflection
+
+// 反射可大大提高程序的灵活性，使得interface{}有更大的发挥余地
+// 反射使用typeOf和valueOf函数从接口中获取目标对象信息
+
+func info(o interface{}) {
+	t := reflect.TypeOf(o)
+	fmt.Println("Type:", t.Name())
+
+	if k := t.Kind(); k != reflect.Struct { // 1. 类型判断
+		fmt.Println("XXX")
+		return
+	}
+
+	v := reflect.ValueOf(o)
+
+	fmt.Println("Fields:")
+
+	for i := 0; i < t.NumField(); i++ { // 2.字段信息
+		f := t.Field(i)
+		val := v.Field(i).Interface()
+		fmt.Printf("%6s : %v = %v \n", f.Name, f.Type, val)
+	}
+
+	for i := 0; i < t.NumMethod(); i++ { // 3. 方法信息
+		m := t.Method(i)
+		fmt.Printf("%6s : %v \n", m.Name, m.Type)
+	}
+}
+
+//反射会将匿名字段作为独立字段(匿名字段本质)
+
+type User struct {
+	Id   int
+	Name string
+	Age  int
+}
+
+type Manager struct {
+	User  //匿名字段
+	title string
+}
+
+func main() {
+	m := Manager{User: User{1, "s", 12}, title: "ddd"}
+	t := reflect.TypeOf(m)
+
+	fmt.Printf("%#v\n", t.Field(1))
+	fmt.Printf("%#v\n", t.FieldByIndex([]int{0, 1}))
+}
+
+// 想要利用反射修改对象状态，前提是interface.data是settabele,即pointer-interface
+// 基本数据类型：
+
+func main() {
+	x := 12
+	v := reflect.ValueOf(&x)
+	fmt.Println(v)
+	v.Elem().SetInt(99)
+	fmt.Println(x)
+}
+
+
+//复杂数据类型：
+
+package main
+ 
+import (
+	"fmt"
+	"reflect"
+)
+ 
+type User struct {
+	Id   int
+	Name string
+	Age  int
+}
+ 
+func main() {
+	u := User{1, "LJ", 19}
+	Set(&u)
+	fmt.Println(u)
+}
+ 
+func Set(o interface{}) {
+	v := reflect.ValueOf(o)
+ 
+	if v.Kind() != reflect.Ptr || !v.Elem().CanSet() { //指针 是否可设置判断
+		fmt.Println("XXX")
+		return
+	} else {
+		v = v.Elem()
+	}
+ 
+	f := v.FieldByName("Name") //通过字段名获取字段
+	if !f.IsValid() {          //字段是否存在判断
+		fmt.Println("BAD")
+		return
+	}
+ 
+	if f.Kind() == reflect.String { //类型判断
+		f.SetString("BYEBYE")
+	}
+}
+
+//通过反射可以“动态”调用方法
+
+package main
+ 
+import (
+	"fmt"
+	"reflect"
+)
+ 
+type User struct {
+	Id   int
+	Name string
+	Age  int
+}
+ 
+func (u User) Hello(name string) {
+	fmt.Println("Hello", name, "my name is", u.Name)
+}
+ 
+func main() {
+	u := User{1, "LJ", 19}
+	v := reflect.ValueOf(u)
+ 
+	mv := v.MethodByName("Hello")  //根据名称获取方法
+ 
+	args := []reflect.Value{reflect.ValueOf("joe")}  //参数
+	mv.Call(args)  //调用
+}
+
+
+// Channel
+// Channel是goroutine沟通的桥梁，大都是阻塞同步的
+//通过make创建，close关闭
+
+// func main(){
+// 	c := make(chan bool)
+// 	go func(){
+// 		fmt.Println("gogooooo")
+// 		c <- true
+// 	}()
+// 	<-c
+// }
+
+//Channel是引用类型
+//可以使用for range来迭代不断操作channel
+
+// func main() {
+// 	c := make(chan bool)
+
+// 	go func() {
+// 		fmt.Println("gooo")
+// 		c <- true
+// 		close(c)
+// 	}()
+
+// 	for v := range c {
+// 		fmt.Println(v)
+// 	}
+// }
+
+// Select
+// 可处理一个或多个channel的发送与接收
+// 同时有多个可用的channel时按随机处理
+// 可用空的select来阻塞main函数
+
+// 可设置超时
+
+func main() {
+	c := make(chan bool)
+	select {
+	case v := <-c:
+		fmt.Println(v)
+	case <-time.After(3 * time.Second):
+		fmt.Println("Timeout")
+	}
+}
+
+
+
+//有buffer的channel --> 先“放”后“取”
+//无buffer的channel--> 先“取”放“”
+
+
+
+
+
+
+var a string 
+var c = make(chan int,10) //有buffer的channel --> 先“放”后“取”
+func f(){
+	a = "saf"
+	c <- 0
+
+}
+
+func main(){ //有buffer的channel --> 先“放”后“取”
+	go f()
+	<-c 
+	print(a)
+}
+
+
+func f(){
+	a = "asdf"
+	<- c 
+}
+//无buffer的channel--> 先“取”放“”
+func main(){
+	go f()
+	c <- 0 
+	print(a)
+}
