@@ -266,7 +266,7 @@ func main() {
 	
 	fmt.Println(b)
 	fmt.Println(a)
-	var ptrInt *int // 1. 定义指针变量
+	var ptrInt *int // 1. 定义指针变量  equal : ptrInt := new(int)
 
 	ptrInt = &a         // 2. 为指针变量赋值   //地址引用 改变引用内内容，原有变量也发生变化
 	fmt.Println(ptrInt) // 3. 访问指针变量中指向地址的值
